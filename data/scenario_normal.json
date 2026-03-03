@@ -1,0 +1,62 @@
+{
+  "meta": {
+    "last_updated": "Just now"
+  },
+  "base": {
+    "at_base": 2,
+    "arriving_soon": 1,
+    "cancelled": 0
+  },
+  "top_bar_alerts": [],
+  "pads": [
+    {
+      "pad": "A",
+      "order": "100",
+      "rt": "08:12",
+      "next_action": "103",
+      "display_action": ""
+    },
+    {
+      "pad": "B",
+      "order": "106",
+      "rt": "08:35",
+      "next_action": "",
+      "display_action": ""
+    },
+    {
+      "pad": "C",
+      "order": "109",
+      "rt": "08:50",
+      "next_action": "Moved to B",
+      "display_action": "Moved to X"
+    },
+    {
+      "pad": "D",
+      "order": "112",
+      "rt": "09:20",
+      "next_action": "",
+      "display_action": ""
+    },
+    {
+      "pad": "E",
+      "order": "115",
+      "rt": "09:30",
+      "next_action": "118",
+      "display_action": ""
+    },
+    {
+      "pad": "F",
+      "order": "121",
+      "rt": "09:55",
+      "next_action": "",
+      "display_action": ""
+    },
+    {
+      "pad": "G",
+      "order": "124",
+      "rt": "10:10",
+      "next_action": "",
+      "display_action": ""
+    }
+  ]
+}
