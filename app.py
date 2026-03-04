@@ -72,6 +72,9 @@ st.markdown(
       /* Make action cells look like "badges" but full-cell */
       td.action-cell { border-left: 1px solid #eef2f7; }
 
+      /* RT highlight when landing is imminent (<10s) */
+      td.rt-soon { background: #fdba74; color: #111827; font-weight: 900; }
+
     </style>
     """,
     unsafe_allow_html=True,
@@ -243,10 +246,13 @@ with right:
     rows_html = []
     for p in pads:
         rt = "" if p.phase in ("LANDING", "LOADING", "FIXING") else str(p.t)
+        rt_cls = "rt-soon" if (p.phase == "FLIGHT" and p.t < 10) else ""
         cls = action_class(p.action)
         action_txt = p.action or ""
         rows_html.append(
-            f"<tr><td>{p.pad}</td><td>{p.order}</td><td>{rt}</td><td class='action-cell {cls}'>{action_txt}</td></tr>"
+            f"<tr><td>{p.pad}</td><td>{p.order}</td>"
+            f"<td class='{rt_cls}'>{rt}</td>"
+            f"<td class='action-cell {cls}'>{action_txt}</td></tr>"
         )
 
     footer = "</tbody></table></div>"
