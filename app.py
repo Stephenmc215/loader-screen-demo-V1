@@ -105,10 +105,13 @@ def init_pads(n: int = 8):
         o = next_order(o)
     return pads
 
+if "seed" not in st.session_state:
+    st.session_state.seed = random.randint(1, 10_000_000)
+
+random.seed(st.session_state.seed)
+
 if "pads" not in st.session_state:
     st.session_state.pads = init_pads(8)
-    st.session_state.seed = random.randint(1, 10_000_000)
-    random.seed(st.session_state.seed)
 
 pads = st.session_state.pads
 
