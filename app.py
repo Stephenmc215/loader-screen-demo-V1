@@ -1,7 +1,16 @@
 import random
 from dataclasses import dataclass
+
 import streamlit as st
 from streamlit_autorefresh import st_autorefresh
+
+# ============================================================
+# Loader Screen Demo (V8 FIXED)
+# Fixes:
+# 1) Seed is set BEFORE pads are initialized (stable per session)
+# 2) HTML table rows are single-line strings (avoids "<tr>..." printing as text)
+# 3) Arriving Soon counts flights within 60s (not all flights)
+# ============================================================
 
 st.set_page_config(page_title="Loader Screen Demo", layout="wide")
 
@@ -105,10 +114,13 @@ def init_pads(n: int = 8):
         o = next_order(o)
     return pads
 
+# IMPORTANT: seed BEFORE any random-generated state is created
+if "seed" not in st.session_state:
+    st.session_state.seed = random.randint(1, 10_000_000)
+random.seed(st.session_state.seed)
+
 if "pads" not in st.session_state:
     st.session_state.pads = init_pads(8)
-    st.session_state.seed = random.randint(1, 10_000_000)
-    random.seed(st.session_state.seed)
 
 pads = st.session_state.pads
 
@@ -165,16 +177,16 @@ def severity(action: str) -> int:
         return 1
     return 0
 
-best = None
+best = {"sev": 0, "pad": "", "action": ""}
 for p in pads:
     sev = severity(p.action)
-    if best is None or sev > best["sev"]:
+    if sev > best["sev"]:
         best = {"sev": sev, "pad": p.pad, "action": p.action}
 
-if best and best["sev"] >= 4:
+if best["sev"] >= 4:
     banner_text = f"CRITICAL: {best['action']} (Pad {best['pad']})"
     banner_bg = "#b91c1c"
-elif best and best["sev"] == 3:
+elif best["sev"] == 3:
     banner_text = f"HIGH: {best['action']} (Pad {best['pad']})"
     banner_bg = "#b45309"
 else:
@@ -190,7 +202,7 @@ left, right = st.columns([1, 4], gap="large")
 
 with left:
     at_base = sum(1 for p in pads if p.phase in ("LANDING", "LOADING", "FIXING"))
-    arriving = sum(1 for p in pads if p.phase == "FLIGHT")
+    arriving = sum(1 for p in pads if p.phase == "FLIGHT" and p.t <= 60)
 
     st.markdown("<div class='metrics-col'>", unsafe_allow_html=True)
     st.markdown("<div class='metric-label'>At Base</div>", unsafe_allow_html=True)
@@ -200,7 +212,7 @@ with left:
     st.markdown(f"<div class='metric-value'>{arriving}</div>", unsafe_allow_html=True)
 
     st.markdown("<div class='metric-label'>Cancelled</div>", unsafe_allow_html=True)
-    st.markdown(f"<div class='metric-value'>0</div>", unsafe_allow_html=True)
+    st.markdown("<div class='metric-value'>0</div>", unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
 def action_class(a: str) -> str:
@@ -215,41 +227,27 @@ def action_class(a: str) -> str:
     return "act-none"
 
 with right:
-    # Build HTML table for perfect colour reliability
-    header = """
-      <div class="grid-wrap">
-        <table class="grid">
-          <thead>
-            <tr>
-              <th class="col-pad">Pad</th>
-              <th class="col-order">Order</th>
-              <th class="col-rt">RT (s)</th>
-              <th class="col-action">Next Action</th>
-            </tr>
-          </thead>
-          <tbody>
-    """
+    # Build HTML table (single-line rows for reliability)
+    header = (
+        '<div class="grid-wrap">'
+        '<table class="grid">'
+        '<thead><tr>'
+        '<th class="col-pad">Pad</th>'
+        '<th class="col-order">Order</th>'
+        '<th class="col-rt">RT (s)</th>'
+        '<th class="col-action">Next Action</th>'
+        '</tr></thead>'
+        '<tbody>'
+    )
 
     rows_html = []
     for p in pads:
         rt = "" if p.phase in ("LANDING", "LOADING", "FIXING") else str(p.t)
         cls = action_class(p.action)
-        action_txt = p.action
+        action_txt = p.action or ""
         rows_html.append(
-            f"""
-            <tr>
-              <td>{p.pad}</td>
-              <td>{p.order}</td>
-              <td>{rt}</td>
-              <td class="action-cell {cls}">{action_txt}</td>
-            </tr>
-            """
+            f"<tr><td>{p.pad}</td><td>{p.order}</td><td>{rt}</td><td class='action-cell {cls}'>{action_txt}</td></tr>"
         )
 
-    footer = """
-          </tbody>
-        </table>
-      </div>
-    """
-
-    st.markdown(header + "\n".join(rows_html) + footer, unsafe_allow_html=True)
+    footer = "</tbody></table></div>"
+    st.markdown(header + "".join(rows_html) + footer, unsafe_allow_html=True)
